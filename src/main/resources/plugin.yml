@@ -1,0 +1,4 @@
+name: NaturalDifficulty
+version: '1.0-SNAPSHOT'
+main: net.jshi.naturalDifficulty.NaturalDifficulty
+api-version: '26.2'
