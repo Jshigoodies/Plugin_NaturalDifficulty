@@ -8,6 +8,10 @@ public final class NaturalDifficulty extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
+
+        // Register the event listener with Spigot
+        getServer().getPluginManager().registerEvents(new CreeperListener(), this);
+
         this.getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[NaturalDifficulty] Enabled");
     }
 
