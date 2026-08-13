@@ -11,6 +11,7 @@ public final class NaturalDifficulty extends JavaPlugin {
 
         // Register the event listener with Spigot
         getServer().getPluginManager().registerEvents(new CreeperListener(), this);
+        getServer().getPluginManager().registerEvents(new SkeletonListener(this), this);
 
         this.getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[NaturalDifficulty] Enabled");
     }

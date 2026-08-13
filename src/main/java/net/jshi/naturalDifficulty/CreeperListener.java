@@ -28,7 +28,7 @@ public class CreeperListener implements Listener {
             // increase health
             AttributeInstance healthAttribute = creeper.getAttribute(Attribute.MAX_HEALTH);
             if (healthAttribute != null) {
-                double newMaxHealth = 40.0; // 40.0 = 20 hearts (double health)
+                double newMaxHealth = 30.0; // 40.0 = 20 hearts (double health)
                 healthAttribute.setBaseValue(newMaxHealth);
                 // Heal the creeper to full with the new max health
                 creeper.setHealth(newMaxHealth);
