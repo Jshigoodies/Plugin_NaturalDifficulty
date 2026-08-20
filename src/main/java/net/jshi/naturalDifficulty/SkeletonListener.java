@@ -32,13 +32,6 @@ public class SkeletonListener implements Listener {
     @EventHandler
     public void onSkseltonSpawn(EntitySpawnEvent event) {
         if(event.getEntity() instanceof Skeleton skeleton) {
-            AttributeInstance healthAttribute = skeleton.getAttribute(Attribute.MAX_HEALTH);
-            if (healthAttribute != null) {
-                double newMaxHealth = 30.0; // 20 hearts
-                healthAttribute.setBaseValue(newMaxHealth);
-                skeleton.setHealth(newMaxHealth); // Fill health bar to new max
-            }
-
             // 2. Increase detection/follow range (Default is 16.0 blocks)
             AttributeInstance followAttribute = skeleton.getAttribute(Attribute.FOLLOW_RANGE);
             if (followAttribute != null) {

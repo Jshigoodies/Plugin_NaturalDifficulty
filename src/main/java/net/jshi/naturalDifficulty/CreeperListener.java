@@ -25,15 +25,6 @@ public class CreeperListener implements Listener {
                 speedAttribute.setBaseValue(1.0);
             }
 
-            // increase health
-            AttributeInstance healthAttribute = creeper.getAttribute(Attribute.MAX_HEALTH);
-            if (healthAttribute != null) {
-                double newMaxHealth = 30.0; // 40.0 = 20 hearts (double health)
-                healthAttribute.setBaseValue(newMaxHealth);
-                // Heal the creeper to full with the new max health
-                creeper.setHealth(newMaxHealth);
-            }
-
             // Increase follow/detection range (Default is 16.0 blocks)
             AttributeInstance followAttribute = creeper.getAttribute(Attribute.FOLLOW_RANGE);
             if (followAttribute != null) {
