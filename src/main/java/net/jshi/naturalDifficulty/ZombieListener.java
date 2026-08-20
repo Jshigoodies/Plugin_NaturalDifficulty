@@ -161,7 +161,7 @@ public class ZombieListener implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0L, 4L);
+        }.runTaskTimer(plugin, 0L, 6L);
     }
 
     // Ensures bedrock, command blocks, and air are protected from destruction
