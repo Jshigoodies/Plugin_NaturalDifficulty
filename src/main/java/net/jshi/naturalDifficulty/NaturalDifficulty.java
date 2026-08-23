@@ -14,6 +14,7 @@ public final class NaturalDifficulty extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SkeletonListener(this), this);
         getServer().getPluginManager().registerEvents(new ZombieListener(this), this);
         getServer().getPluginManager().registerEvents(new SpiderListener(), this);
+        getServer().getPluginManager().registerEvents(new PillagerListener(this), this);
 
         this.getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[NaturalDifficulty] Enabled");
     }
