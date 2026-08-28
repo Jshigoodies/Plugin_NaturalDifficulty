@@ -113,7 +113,7 @@ public class EndermanListener implements Listener {
                         }
                     }
                 }
-            }.runTaskTimer(plugin, 0L, 2L);
+            }.runTaskTimer(plugin, 0L, 1L);
         }
     }
 }

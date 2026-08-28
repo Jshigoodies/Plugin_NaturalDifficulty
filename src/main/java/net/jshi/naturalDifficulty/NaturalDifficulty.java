@@ -24,12 +24,14 @@ public final class NaturalDifficulty extends JavaPlugin {
 
         //hostile nether
         getServer().getPluginManager().registerEvents(new GhastListener(this), this);
-        getServer().getPluginManager().registerEvents(new PiglinListener(this), this);
-        getServer().getPluginManager().registerEvents(new PiglinBruteListener(this), this);
+        getServer().getPluginManager().registerEvents(new PiglinListener(), this);
+        getServer().getPluginManager().registerEvents(new PiglinBruteListener(), this);
+        getServer().getPluginManager().registerEvents(new BlazeListener(this), this);
+        getServer().getPluginManager().registerEvents(new WitherSkeletonListener(this), this);
 
         //passive
         getServer().getPluginManager().registerEvents(new FishListener(), this);
-        getServer().getPluginManager().registerEvents(new FarmAnimalListener(this), this);
+        getServer().getPluginManager().registerEvents(new FarmAnimalListener(), this);
 
         this.getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[NaturalDifficulty] Enabled");
     }

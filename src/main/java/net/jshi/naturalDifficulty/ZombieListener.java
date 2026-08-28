@@ -6,9 +6,7 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntitySpawnEvent;
@@ -31,10 +29,8 @@ public class ZombieListener implements Listener {
     }
 
     @EventHandler
-    public void onZombieSpawn(EntitySpawnEvent event)
-    {
-        if(event.getEntity() instanceof Zombie zombie)
-        {
+    public void onZombieSpawn(EntitySpawnEvent event) {
+        if (event.getEntity() instanceof Zombie zombie) {
             // 1. Set Max Health
             AttributeInstance healthAttribute = zombie.getAttribute(Attribute.MAX_HEALTH);
             if (healthAttribute != null) {
@@ -52,8 +48,7 @@ public class ZombieListener implements Listener {
     }
 
     @EventHandler
-    public void onZombieTarget(EntityTargetLivingEntityEvent event)
-    {
+    public void onZombieTarget(EntityTargetLivingEntityEvent event) {
         if (!(event.getEntity() instanceof Zombie zombie)) return;
         if (!(event.getTarget() instanceof Player)) return;
 
@@ -81,13 +76,13 @@ public class ZombieListener implements Listener {
                 double yDiff = targetLoc.getY() - zombieLoc.getY();
                 double xzDistanceSq = (dx * dx) + (dz * dz);
 
-                // Horizontal direction vector toward player
                 Vector dir = new Vector(dx, 0, dz);
                 if (dir.lengthSquared() > 0) {
                     dir.normalize();
                 }
 
                 Location stepLoc = zombieLoc.clone().add(dir);
+                Material scaffoldMaterial = getScaffoldMaterial(zombie);
 
                 // 1. BLOCK BREAKING: Smash obstacles blocking movement directly in front
                 if (xzDistanceSq > 0.64 && xzDistanceSq <= 144.0) {
@@ -106,7 +101,7 @@ public class ZombieListener implements Listener {
 
                     if (brokeBlock) {
                         zombieLoc.getWorld().playSound(stepLoc, Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 0.8f, 1.0f);
-                        return; // Yield tick to let block clear before continuing movement
+                        return;
                     }
                 }
 
@@ -116,7 +111,7 @@ public class ZombieListener implements Listener {
                     Block headSpace = stepLoc.clone().add(0, 1, 0).getBlock();
 
                     if (targetBlock.isPassable() && headSpace.isPassable()) {
-                        targetBlock.setType(Material.DIRT);
+                        targetBlock.setType(scaffoldMaterial);
                         zombieLoc.getWorld().playSound(stepLoc, Sound.BLOCK_GRAVEL_PLACE, 0.8f, 1.2f);
 
                         Location tpLoc = stepLoc.add(0, 1, 0);
@@ -130,14 +125,12 @@ public class ZombieListener implements Listener {
                     Block feetSpace = stepLoc.clone().subtract(0, 1, 0).getBlock();
                     Block headSpace = stepLoc.getBlock();
 
-                    // Ensure air exists for the zombie to step down into
                     if (feetSpace.isPassable() && headSpace.isPassable()) {
                         if (floorUnderStep.isPassable()) {
-                            floorUnderStep.setType(Material.DIRT);
+                            floorUnderStep.setType(scaffoldMaterial);
                             zombieLoc.getWorld().playSound(stepLoc, Sound.BLOCK_GRAVEL_PLACE, 0.8f, 1.2f);
                         }
 
-                        // Teleport down to step seamlessly
                         Location tpLoc = stepLoc.subtract(0, 1, 0);
                         tpLoc.setDirection(zombieLoc.getDirection());
                         zombie.teleport(tpLoc);
@@ -147,7 +140,7 @@ public class ZombieListener implements Listener {
                 else if (yDiff >= 1.5 && xzDistanceSq <= 0.64) {
                     Block headSpace = zombieLoc.clone().add(0, 2, 0).getBlock();
                     if (headSpace.isPassable()) {
-                        zombieLoc.getBlock().setType(Material.DIRT);
+                        zombieLoc.getBlock().setType(scaffoldMaterial);
                         zombieLoc.getWorld().playSound(zombieLoc, Sound.BLOCK_GRAVEL_PLACE, 0.8f, 1.2f);
                         zombie.teleport(zombieLoc.add(0, 1, 0));
                     }
@@ -156,7 +149,7 @@ public class ZombieListener implements Listener {
                 else if (xzDistanceSq > 1.44 && xzDistanceSq <= 144.0) {
                     Block floorAhead = stepLoc.subtract(0, 1, 0).getBlock();
                     if (floorAhead.isPassable()) {
-                        floorAhead.setType(Material.DIRT);
+                        floorAhead.setType(scaffoldMaterial);
                         zombieLoc.getWorld().playSound(stepLoc, Sound.BLOCK_GRAVEL_PLACE, 0.8f, 1.2f);
                     }
                 }
@@ -164,7 +157,17 @@ public class ZombieListener implements Listener {
         }.runTaskTimer(plugin, 0L, 6L);
     }
 
-    // Ensures bedrock, command blocks, and air are protected from destruction
+    private Material getScaffoldMaterial(Zombie zombie) {
+        if (zombie instanceof Drowned) {
+            return Material.DRIED_KELP_BLOCK;
+        } else if (zombie instanceof Husk) {
+            return Material.SANDSTONE;
+        } else if (zombie instanceof PigZombie) {
+            return Material.NETHERRACK;
+        }
+        return Material.DIRT;
+    }
+
     private boolean canBreak(Block block) {
         if (block.isPassable()) return false;
         Material type = block.getType();
@@ -174,5 +177,10 @@ public class ZombieListener implements Listener {
                 && type != Material.CHAIN_COMMAND_BLOCK
                 && type != Material.REPEATING_COMMAND_BLOCK
                 && type != Material.STRUCTURE_BLOCK;
+    }
+
+    private AttributeInstance getAttribute(Zombie entity, Attribute primary, Attribute fallback) {
+        AttributeInstance instance = entity.getAttribute(primary);
+        return (instance != null) ? instance : entity.getAttribute(fallback);
     }
 }

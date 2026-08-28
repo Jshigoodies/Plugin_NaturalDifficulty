@@ -1,97 +1,87 @@
 package net.jshi.naturalDifficulty;
 
-import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Cow;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Pig;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 public class FarmAnimalListener implements Listener {
-    private final JavaPlugin plugin;
-    private final NamespacedKey scaleKey;
-
-    public FarmAnimalListener(JavaPlugin plugin) {
-        this.plugin = plugin;
-        this.scaleKey = new NamespacedKey(plugin, "animal_scale");
-    }
 
     @EventHandler
     public void onAnimalSpawn(EntitySpawnEvent event) {
-        if (!(event.getEntity() instanceof Cow || event.getEntity() instanceof Pig || event.getEntity() instanceof Chicken)) {
-            return;
+        if (event.getEntity() instanceof LivingEntity living) {
+            processAnimal(living);
         }
-
-        LivingEntity animal = (LivingEntity) event.getEntity();
-        double scale;
-
-        if (!animal.getPersistentDataContainer().has(scaleKey, PersistentDataType.DOUBLE)) {
-            // Generates scale between 1.5x and 3.0x size
-            scale = ThreadLocalRandom.current().nextDouble(1.5, 3.0);
-            animal.getPersistentDataContainer().set(scaleKey, PersistentDataType.DOUBLE, scale);
-        } else {
-            // Retrieve existing scale if re-spawning/loading chunks
-            Double storedScale = animal.getPersistentDataContainer().get(scaleKey, PersistentDataType.DOUBLE);
-            scale = (storedScale != null) ? storedScale : 1.0;
-        }
-
-        applyScaleAndHealth(animal, scale);
     }
 
     @EventHandler
-    public void onAnimalDeath(EntityDeathEvent event) {
-        LivingEntity animal = event.getEntity();
+    public void onEntitiesLoad(EntitiesLoadEvent event) {
+        for (Entity entity : event.getEntities()) {
+            if (entity instanceof LivingEntity living) {
+                processAnimal(living);
+            }
+        }
+    }
+
+    private void processAnimal(LivingEntity animal) {
         if (!(animal instanceof Cow || animal instanceof Pig || animal instanceof Chicken)) {
             return;
         }
 
-        Double scale = animal.getPersistentDataContainer().get(scaleKey, PersistentDataType.DOUBLE);
-        if (scale == null) return;
+        // Prevent scaling the same animal multiple times across chunk unloads/reloads
+        if (animal.getScoreboardTags().contains("scaled_animal")) {
+            return;
+        }
+        animal.addScoreboardTag("scaled_animal");
 
-        // Volumetric (Cubic) drop multiplier
-        double dropMultiplier = Math.pow(scale, 3);
+        // Random size multiplier between 1.5x and 3.0x
+        double randomScale = ThreadLocalRandom.current().nextDouble(1.5, 3.0);
 
-        for (ItemStack drop : event.getDrops()) {
-            int originalAmount = drop.getAmount();
-            int newAmount = (int) Math.round(originalAmount * dropMultiplier);
-            drop.setAmount(Math.max(1, newAmount));
+        AttributeInstance scaleAttribute = animal.getAttribute(Attribute.SCALE);
+        if (scaleAttribute != null) {
+            scaleAttribute.setBaseValue(randomScale);
         }
 
-        event.setDroppedExp((int) Math.round(event.getDroppedExp() * dropMultiplier));
+        AttributeInstance healthAttribute = animal.getAttribute(Attribute.MAX_HEALTH);
+        if (healthAttribute != null) {
+            double baseDefaultHealth = (animal instanceof Chicken) ? 4.0 : 10.0;
+            double newMaxHealth = Math.round(baseDefaultHealth * Math.pow(randomScale, 2));
+            healthAttribute.setBaseValue(newMaxHealth);
+            animal.setHealth(newMaxHealth);
+        }
     }
 
-    private void applyScaleAndHealth(LivingEntity entity, double scale) {
-        // Apply Visual & Hitbox Scale
-        AttributeInstance scaleAttribute = entity.getAttribute(Attribute.SCALE);
-        if (scaleAttribute != null) {
-            scaleAttribute.setBaseValue(scale);
-        }
+    @EventHandler
+    public void onAnimalDeath(EntityDeathEvent event) {
+        if (event.getEntity() instanceof Cow || event.getEntity() instanceof Pig || event.getEntity() instanceof Chicken) {
+            LivingEntity animal = event.getEntity();
 
-        // Apply Health Multiplier (Scales quadratically: scale^2)
-        AttributeInstance healthAttribute = entity.getAttribute(Attribute.MAX_HEALTH);
-        if (healthAttribute == null) {
-            healthAttribute = entity.getAttribute(Attribute.MAX_HEALTH);
-        }
+            AttributeInstance scaleAttribute = animal.getAttribute(Attribute.SCALE);
+            if (scaleAttribute != null) {
+                double scale = scaleAttribute.getValue();
 
-        if (healthAttribute != null) {
-            double baseDefaultHealth = 10.0; // Standard vanilla cow/pig base health
-            if (entity instanceof Chicken) {
-                baseDefaultHealth = 4.0;
+                if (scale > 1.0) {
+                    double dropMultiplier = Math.pow(scale, 3);
+
+                    for (ItemStack drop : event.getDrops()) {
+                        int totalAmount = (int) Math.round(drop.getAmount() * dropMultiplier);
+                        drop.setAmount(Math.min(64, Math.max(1, totalAmount)));
+                    }
+
+                    event.setDroppedExp((int) Math.round(event.getDroppedExp() * dropMultiplier));
+                }
             }
-
-            double scaledMaxHealth = Math.round(baseDefaultHealth * Math.pow(scale, 2));
-            healthAttribute.setBaseValue(scaledMaxHealth);
-            entity.setHealth(scaledMaxHealth); // Fill health bar to max on spawn
         }
     }
 }
