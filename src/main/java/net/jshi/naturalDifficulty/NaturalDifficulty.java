@@ -10,11 +10,26 @@ public final class NaturalDifficulty extends JavaPlugin {
         // Plugin startup logic
 
         // Register the event listener with Spigot
+
+        //hostile overworld
         getServer().getPluginManager().registerEvents(new CreeperListener(), this);
         getServer().getPluginManager().registerEvents(new SkeletonListener(this), this);
         getServer().getPluginManager().registerEvents(new ZombieListener(this), this);
         getServer().getPluginManager().registerEvents(new SpiderListener(), this);
         getServer().getPluginManager().registerEvents(new PillagerListener(this), this);
+        getServer().getPluginManager().registerEvents(new EndermanListener(this), this);
+        getServer().getPluginManager().registerEvents(new WitchListener(this), this);
+        getServer().getPluginManager().registerEvents(new SilverfishListener(this), this);
+        getServer().getPluginManager().registerEvents(new RavagerListener(this), this);
+
+        //hostile nether
+        getServer().getPluginManager().registerEvents(new GhastListener(this), this);
+        getServer().getPluginManager().registerEvents(new PiglinListener(this), this);
+        getServer().getPluginManager().registerEvents(new PiglinBruteListener(this), this);
+
+        //passive
+        getServer().getPluginManager().registerEvents(new FishListener(), this);
+        getServer().getPluginManager().registerEvents(new FarmAnimalListener(this), this);
 
         this.getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[NaturalDifficulty] Enabled");
     }

@@ -3,11 +3,15 @@ package net.jshi.naturalDifficulty;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.util.Vector;
 
 public class CreeperListener implements Listener {
 
@@ -78,6 +82,31 @@ public class CreeperListener implements Listener {
             }
         }
         return nearest;
+    }
+
+    @EventHandler
+    public void onCreeperExplodeDamage(EntityDamageByEntityEvent event) {
+        if(event.getDamager() instanceof Creeper creeper && event.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
+            Entity victim = event.getEntity();
+
+            Vector knockbackDir = victim.getLocation().toVector().subtract(creeper.getLocation().toVector());
+
+            if (knockbackDir.lengthSquared() > 0) {
+                knockbackDir.normalize();
+            }
+            else {
+                knockbackDir = new Vector(0, 1, 0); // Default upward push if standing in the exact same spot
+            }
+
+            // 1. Multiply horizontal push (3.0x = strong knockback launching players backward)
+            knockbackDir.multiply(3.0);
+
+            // 2. Add guaranteed vertical lift so entities launch up into the air
+            knockbackDir.setY(Math.max(knockbackDir.getY() + 0.6, 1.2));
+
+            // Apply custom velocity
+            victim.setVelocity(knockbackDir);
+        }
     }
 
 }
