@@ -53,7 +53,7 @@ public class PlayerBuffListener implements Listener {
                     player.addPotionEffect(new PotionEffect(
                             PotionEffectType.REGENERATION,
                             100,
-                            2,
+                            0,
                             true,
                             false
                     ));
